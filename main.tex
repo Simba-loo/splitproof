@@ -1,0 +1,153 @@
+%
+% This is the LaTeX template file for lecture notes for CS294-8,
+% Computational Biology for Computer Scientists.  When preparing 
+% LaTeX notes for this class, please use this template.
+%
+% To familiarize yourself with this template, the body contains
+% some examples of its use.  Look them over.  Then you can
+% run LaTeX on this file.  After you have LaTeXed this file then
+% you can look over the result either by printing it out with
+% dvips or using xdvi.
+%
+% This template is based on the template for Prof. Sinclair's CS 270.
+
+\documentclass{article}
+\usepackage{graphics}
+\setlength{\oddsidemargin}{0.25 in}
+\setlength{\evensidemargin}{-0.25 in}
+\setlength{\topmargin}{-0.6 in}
+\setlength{\textwidth}{6.5 in}
+\setlength{\textheight}{8.5 in}
+\setlength{\headsep}{0.75 in}
+\setlength{\parindent}{0 in}
+\setlength{\parskip}{0.1 in}
+
+\usepackage[ruled]{algorithm2e} % For algorithms
+\renewcommand{\algorithmcfname}{ALGORITHM}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetAlCapHSkip{0pt}
+\IncMargin{-\parindent}
+
+
+%\documentclass{llncs}
+%\usepackage{llncsdoc}
+
+%% ==== packages =====
+%%\usepackage{latexsym}
+\usepackage{amsmath,amssymb,enumitem,dsfont,bm,url,graphicx,comment,mathtools}
+%\usepackage{cite}
+%\let\proof\relax
+%\let\endproof\relax
+\usepackage{amsthm}
+%
+%\usepackage{color}
+%
+%\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{algorithmic}% http://ctan.org/pkg/algorithms
+%\renewcommand{\algorithmicrequire}{\textbf{Inputs:}}
+%\renewcommand{\algorithmicensure}{\textbf{Outputs:}}
+%\usepackage{tikz}
+%\setlength{\intextsep}{1\baselineskip}
+%
+%
+\def\EE{{\mathbb{E}}}
+\def\PP{{\mathbb{P}}}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert} %
+\DeclarePairedDelimiter{\brk}{[}{]}
+\DeclarePairedDelimiter{\crl}{\{}{\}}
+\DeclarePairedDelimiter{\prn}{(}{)}
+
+\newcommand{\nc}{\newcommand}
+\nc{\nt}{\newtheorem}
+\nt{theorem}{Theorem}[section]
+\nt{cor}[theorem]{Corollary}
+\nt{prop}[theorem]{Proposition}
+\nt{lemma}[theorem]{Lemma}
+\nt{conjecture}[theorem]{Conjecture}
+\nt{defn}[theorem]{Definition}
+\begin{document}
+%FILL IN THE RIGHT INFO.
+%\lecture{**LECTURE-NUMBER**}{**DATE**}{**LECTURER**}{**SCRIBE**}
+\title{Split proof scheduling}
+\date{\vspace{-5ex}}
+\maketitle
+%\footnotetext{These notes are partially based on those of Nigel Mansell.}
+
+% **** YOUR NOTES GO HERE:
+
+% Some general latex examples and examples making use of the
+% macros follow.  
+%**** IN GENERAL, BE BRIEF. LONG SCRIBE NOTES, NO MATTER HOW WELL WRITTEN,
+%**** ARE NEVER READ BY ANYBODY.
+
+\section{Setting}
+
+There are $n$ jobs with sizes $p\in R_+^n$ to be processed on a server with capacity 1. Jobs arrive at times $d_i$ (unknown to the server) and are completed by some time $C_i$, and we are interested in minimizing expected total flow
+
+$F = \sum F_i = \sum (C_i-d_i)$.
+
+We say scheduling mechanism is split proof if max waiting time of any two jobs is at least the waiting time of a single job with size equal two the sum of sizes of the two jobs.
+
+
+\section{Exponential Scheduling}
+
+Consider the following online scheduling algorithm. When a job of size $p_i$ arrives, we generate a random score $v_i\sim exp(\lambda = p_i)$. Then at any time the server processes the job with highest score. 
+
+Additionally, scores of jobs that were processed for some time $t'$ are adjusted as $v_i' = \frac{v p_i}{p_i-t'}$. Computationally, we only need to do this reassignment when a new job arrives. Also note that for any $t'$ the distribution for $v_i'$ is $v_i'\sim exp(\lambda = p_i-t')$ (scaling property of exponential distribution).
+
+\begin{theorem}
+Exponential scheduling is split-proof
+\end{theorem}
+\begin{proof}
+This is a pretty simple argument
+\end{proof}
+
+
+
+
+\section{Flow guarantees for exponential scheduling}
+
+\begin{theorem}
+When $d_i = 0$ for all $i$, exponential scheduling gives a $2$-approximation for optimal flow.
+\end{theorem}
+
+\begin{proof}
+We prove this by proving 2-approximation for total delay, $D=\sum (C_i-p_i)$.
+
+$$D = \sum_i \sum_{j\neq i} D_{ij},$$
+
+where $D_{ij}$ is delay that job $j$ imposes on job $i$. Suppose jobs are sorted in ascending order. Than, in optimal schedule we have $D_{ij} + D_{ji}= min(p_i,p_j)$.
+
+For exponential scheduling, for any two jobs, we have $\PP[i>j] = \frac{p_i}{p_i+p_j}$. ($i>j$ means $i$ is scheduled after $j$). Thus, we have $D_{ij}+D_{ji} = \frac{2p_i p_j}{p_i + p_j} \leq 2 min(p_i,p_j)$. Done.
+\end{proof}
+
+Unfortunately, this does not extend to arbitrary release dates. Consider the following instance: on $t=1$, $n$ jobs are released, $n-1$ of them are of size 1 and the last one is of size $A$. Then, on turn $t = n-1$ new jobs of size 1 start arriving at every integer time, for a long-long time. For large enough $n$, w.h.p. exponential scheduling would result in a queue of size $A$ by turn $t = n-1$ and so there is no constant factor approximation.
+
+\begin{conjecture}
+If server is sped up by a factor of 2, exponential scheduling is 1-competitive with the optimal schedule.
+\end{conjecture}
+
+(Really, I would be happy with any constant factor approximation and any speed up).
+
+\subsection{Some useful facts}
+
+I list a few things that I tried in case they're useful.
+
+1) One could try to show, that for significantly large speed-up, $N_t$, number of jobs in queue at times $t$ is always smaller for the exp scheduling. This is unfortunately, not true, the instance that breaks it for any speed-up is $p_i=i$.
+
+2) Since we know that Prus's algo that processes the least processed job is competitive under speed-up, we can try and show that exp scheduling is competitive with it rather than with SRPT. I couldn't find a way to use this.
+
+3) It turns out that a simpler randomized algo is provably always worse than exp scheduling and might be simpler to analyze: for every job you sample it's virtual size $p_i'\sim u[0,p_i]$ and process shortest remaining virtual size. Couldn't do anything with this either. 
+
+
+
+
+
+\end{document}
+
+
+
+
+
